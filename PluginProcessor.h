@@ -58,6 +58,14 @@ public:
     juce::AudioProcessorValueTreeState apvts {*this, nullptr, "Parameters", createParameterLayout()};
     
 private:
+    
+    using Filter = juce::dsp::IIR::Filter<float>; //per fare prima
+    
+    using CutFilter = juce::dsp::ProcessorChain<Filter, Filter, Filter, Filter>;//catena di 4 filtri da 12dB/Oct
+    
+    using MonoChain = juce::dsp::ProcessorChain<CutFilter, CutFilter, Filter, Filter, Filter>; //catena dei 2 filtri cut seguiti dai 3 peck
+    
+    MonoChain leftChain, rightChain;//catene per i due canali stereo
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CS_2110AudioProcessor)
 };
