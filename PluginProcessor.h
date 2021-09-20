@@ -10,13 +10,22 @@
 
 #include <JuceHeader.h>
 
+
+enum Slope
+{
+    Slope_12,
+    Slope_24,
+    Slope_36,
+    Slope_48
+};
+
 struct ChainSettings
 {
     float lowPeakFreq {0}, lowPeakGainInDecibels {0}, lowPeakQuality {1.f};
     float mediumPeakFreq {0}, mediumPeakGainInDecibels {0}, mediumPeakQuality {1.f};
     float highPeakFreq {0}, highPeakGainInDecibels {0}, highPeakQuality {1.f};
     float lowCutFreq {0}, highCutFreq {0};
-    int lowCutSlope {0}, highCutSlope {0};
+    int lowCutSlope {Slope::Slope_12}, highCutSlope {Slope::Slope_12};
 };
 
 ChainSettings getChainSettings(juce::AudioProcessorValueTreeState & apvts);
@@ -73,7 +82,7 @@ private:
     using Filter = juce::dsp::IIR::Filter<float>; //per fare prima
     
     using CutFilter = juce::dsp::ProcessorChain<Filter, Filter, Filter, Filter>;//catena di 4 filtri da 12dB/Oct
-    
+    //CAPIRE COME AGGIUNGERE GAIN E COMPRESSORE ALLA CATENA ED EVENTUALMENTE CREARNE 2 CON PEAK e COMP INTERCAMBIABILI CON UN BOTTONE
     using MonoChain = juce::dsp::ProcessorChain<CutFilter, CutFilter, Filter, Filter, Filter>; //catena dei 2 filtri cut seguiti dai 3 peck
     
     MonoChain leftChain, rightChain;//catene per i due canali stereo
