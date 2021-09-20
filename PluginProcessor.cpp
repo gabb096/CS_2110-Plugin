@@ -104,6 +104,31 @@ void CS_2110AudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
     leftChain.prepare(spec);
     rightChain.prepare(spec);
     
+    auto chainSettings = getChainSettings(apvts);
+    
+    auto lowPeakCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate,
+                                                                                   chainSettings.lowPeakFreq,
+                                                                                   chainSettings.lowPeakQuality,
+                                                                                   juce::Decibels::decibelsToGain(chainSettings.lowPeakGainInDecibels));
+    
+    auto mediumPeakCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate,
+                                                                                      chainSettings.mediumPeakFreq,
+                                                                                      chainSettings.mediumPeakQuality,
+                                                                                      juce::Decibels::decibelsToGain(chainSettings.mediumPeakGainInDecibels));
+
+    auto highPeakCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate,
+                                                                                   chainSettings.highPeakFreq,
+                                                                                   chainSettings.highPeakQuality,
+                                                                                   juce::Decibels::decibelsToGain(chainSettings.highPeakGainInDecibels));
+    
+    *leftChain.get<ChainPosition::LowPeak>().coefficients    = *lowPeakCoefficients;
+    *leftChain.get<ChainPosition::MediumPeak>().coefficients = *mediumPeakCoefficients;
+    *leftChain.get<ChainPosition::HighPeak>().coefficients   = *highPeakCoefficients;
+    
+    *rightChain.get<ChainPosition::LowPeak>().coefficients    = *lowPeakCoefficients;
+    *rightChain.get<ChainPosition::MediumPeak>().coefficients = *mediumPeakCoefficients;
+    *rightChain.get<ChainPosition::HighPeak>().coefficients   = *highPeakCoefficients;
+    
 }
 
 void CS_2110AudioProcessor::releaseResources()
@@ -153,6 +178,41 @@ void CS_2110AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
     
+    /*
+     Idea per implementare l'input gain e l'inversione di fase insieme
+     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+    {
+        for(int j = 0, j<samplePerBlock;++j)
+        {
+            
+        }
+    }*/
+    
+    auto chainSettings = getChainSettings(apvts);
+    
+    auto lowPeakCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(),
+                                                                                   chainSettings.lowPeakFreq,
+                                                                                   chainSettings.lowPeakQuality,
+                                                                                   juce::Decibels::decibelsToGain(chainSettings.lowPeakGainInDecibels));
+    
+    auto mediumPeakCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(),
+                                                                                   chainSettings.mediumPeakFreq,
+                                                                                   chainSettings.mediumPeakQuality,
+                                                                                   juce::Decibels::decibelsToGain(chainSettings.mediumPeakGainInDecibels));
+
+    auto highPeakCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(),
+                                                                                   chainSettings.highPeakFreq,
+                                                                                   chainSettings.highPeakQuality,
+                                                                                   juce::Decibels::decibelsToGain(chainSettings.highPeakGainInDecibels));
+    
+    *leftChain.get<ChainPosition::LowPeak>().coefficients    = *lowPeakCoefficients;
+    *leftChain.get<ChainPosition::MediumPeak>().coefficients = *mediumPeakCoefficients;
+    *leftChain.get<ChainPosition::HighPeak>().coefficients   = *highPeakCoefficients;
+    
+    *rightChain.get<ChainPosition::LowPeak>().coefficients    = *lowPeakCoefficients;
+    *rightChain.get<ChainPosition::MediumPeak>().coefficients = *mediumPeakCoefficients;
+    *rightChain.get<ChainPosition::HighPeak>().coefficients   = *highPeakCoefficients;
+    
     // Dividiamo dal buffer che l'host invierà il canale destro e sinistro per darli alle rispettive "catene"
     juce::dsp::AudioBlock<float> block(buffer);
     
@@ -164,7 +224,6 @@ void CS_2110AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
     //Ora possiamo passarli
     leftChain.process(leftContext);
     rightChain.process(rightContext);
-    
     
 }
 
@@ -186,12 +245,46 @@ void CS_2110AudioProcessor::getStateInformation (juce::MemoryBlock& destData)
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
+    juce::MemoryOutputStream mos(destData,true);
+    apvts.state.writeToStream(mos);
 }
 
 void CS_2110AudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+    auto tree = juce::ValueTree::readFromData(data, sizeInBytes);
+    if(tree.isValid())
+    {
+        apvts.replaceState(tree);
+        //updateFilters();
+    }
+}
+
+ChainSettings getChainSettings(juce::AudioProcessorValueTreeState & apvts)
+{
+    ChainSettings settings;
+    
+    settings.lowCutFreq = apvts.getRawParameterValue("LowCut_Freq")->load();
+    settings.lowCutSlope = apvts.getRawParameterValue("LowCut_Slope")->load();
+    
+    settings.highCutFreq = apvts.getRawParameterValue("HighCut_Freq")->load();
+    settings.highCutSlope = apvts.getRawParameterValue("HighCut_Slope")->load();
+    
+    settings.lowPeakFreq = apvts.getRawParameterValue("LowPeak_Freq")->load();
+    settings.lowPeakGainInDecibels = apvts.getRawParameterValue("LowPeak_Gain")->load();
+    settings.lowPeakQuality = apvts.getRawParameterValue("LowPeak_Q")->load();
+    
+    settings.mediumPeakFreq = apvts.getRawParameterValue("MediumPeak_Freq")->load();
+    settings.mediumPeakGainInDecibels = apvts.getRawParameterValue("MediumPeak_Gain")->load();
+    settings.mediumPeakQuality = apvts.getRawParameterValue("MediumPeak_Q")->load();
+    
+    settings.highPeakFreq = apvts.getRawParameterValue("HighPeak_Freq")->load();
+    settings.highPeakGainInDecibels = apvts.getRawParameterValue("HighPeak_Gain")->load();
+    settings.highPeakQuality = apvts.getRawParameterValue("HighPeak_Q")->load();
+
+
+    return settings;
 }
 
 // Creo la lista con tutti i parametri modificabili dall'utente
@@ -260,7 +353,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout CS_2110AudioProcessor::creat
     layout.add(std::make_unique<juce::AudioParameterFloat>("MediumPeak_Freq",
                                                            "MediumPeak Freq",
                                                            juce::NormalisableRange<float>(3000.f, 15000.f, 1.f, 1.f),
-                                                           5000.f));
+                                                           5000.0f));
     
     layout.add(std::make_unique<juce::AudioParameterFloat>("MediumPeak_Gain",
                                                            "MediumPeak Gain",
@@ -292,22 +385,22 @@ juce::AudioProcessorValueTreeState::ParameterLayout CS_2110AudioProcessor::creat
     layout.add(std::make_unique<juce::AudioParameterFloat>("Threshold",
                                                            "Threshold",
                                                            juce::NormalisableRange<float>(-60.f, 0.0f, 0.5f, 1.f),
-                                                           0.0f));
+                                                           -20.0f));
 
     layout.add(std::make_unique<juce::AudioParameterFloat>("Ratio",
-                                                            "Ratio",
-                                                            juce::NormalisableRange<float>(1.f, 20.f, 0.5f, 1.f),
-                                                            2.0f));
+                                                           "Ratio",
+                                                           juce::NormalisableRange<float>(1.f, 20.f, 0.5f, 1.f),
+                                                           2.0f));
 
     layout.add(std::make_unique<juce::AudioParameterFloat>("Attack",
-                                                            "Attack",
-                                                            juce::NormalisableRange<float>(1.f, 200.f, 0.5f, 1.f),
-                                                            2.0f));
+                                                           "Attack",
+                                                           juce::NormalisableRange<float>(1.f, 200.f, 0.5f, 1.f),
+                                                           2.0f));
     
     layout.add(std::make_unique<juce::AudioParameterFloat>("Release",
-                                                            "Release",
-                                                            juce::NormalisableRange<float>(1.f, 200.f, 0.5f, 1.f),
-                                                            2.0f));
+                                                           "Release",
+                                                           juce::NormalisableRange<float>(1.f, 200.f, 0.5f, 1.f),
+                                                           2.0f));
 
     layout.add(std::make_unique<juce::AudioParameterFloat>("MakeUp_Gain",
                                                            "MakeUp Gain",
@@ -323,6 +416,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout CS_2110AudioProcessor::creat
     
     return layout;
 }
+
 
 //==============================================================================
 // This creates new instances of the plugin...

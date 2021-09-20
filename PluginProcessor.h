@@ -10,6 +10,17 @@
 
 #include <JuceHeader.h>
 
+struct ChainSettings
+{
+    float lowPeakFreq {0}, lowPeakGainInDecibels {0}, lowPeakQuality {1.f};
+    float mediumPeakFreq {0}, mediumPeakGainInDecibels {0}, mediumPeakQuality {1.f};
+    float highPeakFreq {0}, highPeakGainInDecibels {0}, highPeakQuality {1.f};
+    float lowCutFreq {0}, highCutFreq {0};
+    int lowCutSlope {0}, highCutSlope {0};
+};
+
+ChainSettings getChainSettings(juce::AudioProcessorValueTreeState & apvts);
+
 //==============================================================================
 /**
 */
@@ -66,6 +77,16 @@ private:
     using MonoChain = juce::dsp::ProcessorChain<CutFilter, CutFilter, Filter, Filter, Filter>; //catena dei 2 filtri cut seguiti dai 3 peck
     
     MonoChain leftChain, rightChain;//catene per i due canali stereo
+    
+    enum ChainPosition
+    {
+        LowCut,
+        HighCut,
+        LowPeak,
+        MediumPeak,
+        HighPeak
+    };
+    
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CS_2110AudioProcessor)
 };
