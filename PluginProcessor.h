@@ -22,9 +22,9 @@ enum Slope
 struct ChainSettings
 {
     //controlla di fase
-    //int phase{1};
+    bool phase {false};
     //input e output gain
-    //float inputGainInDecibels{1}, outputGainInDecibels{1};
+    float inputGainInDecibels{0}, outputGainInDecibels{0};
     // lowCut e highCut
     float lowCutFreq {0}, highCutFreq {0};
     int lowCutSlope {Slope::Slope_12}, highCutSlope {Slope::Slope_12};
@@ -33,7 +33,7 @@ struct ChainSettings
     float mediumPeakFreq {0}, mediumPeakGainInDecibels {0}, mediumPeakQuality {1.f};
     float highPeakFreq {0}, highPeakGainInDecibels {0}, highPeakQuality {1.f};
     // compressore
-    //float thresholdInDecibels{0}, ratio{1.f}, attack{1.f}, release{1.f};
+    float thresholdInDecibels{0}, ratio{1.f}, attack{1.f}, release{1.f};
     
 };
 
@@ -97,35 +97,40 @@ private:
    
     using Comp = juce::dsp::Compressor<float>;
 
-    //using MonoChain = juce::dsp::ProcessorChain<Gain, CutFilter, CutFilter, Filter, Filter, Filter, Comp, Gain>;
     //catena dei 2 filtri cut seguiti dai 3 peck e dal compressore
-    using MonoChain = juce::dsp::ProcessorChain<CutFilter, CutFilter, Filter, Filter, Filter>;
+    using MonoChain = juce::dsp::ProcessorChain<Gain, CutFilter, CutFilter, Filter, Filter, Filter, Comp, Gain>;
     
     MonoChain leftChain, rightChain;//catene per i due canali stereo
+    
+    void updateInputGainAndPhase(const ChainSettings &chainSettings);
+    
+    void updateLowCutFilter(const ChainSettings& chainSettings);
+    void updateHighCutFilter(const ChainSettings& chainSettings);
     
     void updateLowPeakFilter(const ChainSettings& chainSetting);
     void updateMediumPeakFilter(const ChainSettings& chainSetting);
     void updateHighPeakFilter(const ChainSettings& chainSetting);
 
+    void updateCutAndPeakFilters(const ChainSettings& chainSetting);
+    
+    void updateCompressor(const ChainSettings& chainSetting);
+    
+    void updateOutputGain(const ChainSettings &chainSettings);
+
     using Coefficients = Filter::CoefficientsPtr;
     
     static void updateCoefficients(Coefficients& old, const Coefficients& replacement);
-    
-    void updateCutAndPeakFilters(const ChainSettings& chainSetting);
-    
-    void updateLowCutFilter(const ChainSettings& chainSettings);
-    void updateHighCutFilter(const ChainSettings& chainSettings);
 
     enum ChainPosition
     {
-        //InputGain,
+        InputGain,
         LowCut,
         HighCut,
         LowPeak,
         MediumPeak,
         HighPeak,
-        //Compressor,
-        //OutputGain
+        Compressor,
+        OutputGain
     };
 
     //==============================================================================
