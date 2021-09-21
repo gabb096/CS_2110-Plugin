@@ -21,11 +21,20 @@ enum Slope
 
 struct ChainSettings
 {
+    //controlla di fase
+    //int phase{1};
+    //input e output gain
+    //float inputGainInDecibels{1}, outputGainInDecibels{1};
+    // lowCut e highCut
+    float lowCutFreq {0}, highCutFreq {0};
+    int lowCutSlope {Slope::Slope_12}, highCutSlope {Slope::Slope_12};
+    // filtri peak
     float lowPeakFreq {0}, lowPeakGainInDecibels {0}, lowPeakQuality {1.f};
     float mediumPeakFreq {0}, mediumPeakGainInDecibels {0}, mediumPeakQuality {1.f};
     float highPeakFreq {0}, highPeakGainInDecibels {0}, highPeakQuality {1.f};
-    float lowCutFreq {0}, highCutFreq {0};
-    int lowCutSlope {Slope::Slope_12}, highCutSlope {Slope::Slope_12};
+    // compressore
+    //float thresholdInDecibels{0}, ratio{1.f}, attack{1.f}, release{1.f};
+    
 };
 
 ChainSettings getChainSettings(juce::AudioProcessorValueTreeState & apvts);
@@ -79,23 +88,46 @@ public:
     
 private:
     
+    using Gain = juce::dsp::Gain<float>;
+    
     using Filter = juce::dsp::IIR::Filter<float>; //per fare prima
     
     using CutFilter = juce::dsp::ProcessorChain<Filter, Filter, Filter, Filter>;//catena di 4 filtri da 12dB/Oct
     //CAPIRE COME AGGIUNGERE GAIN E COMPRESSORE ALLA CATENA ED EVENTUALMENTE CREARNE 2 CON PEAK e COMP INTERCAMBIABILI CON UN BOTTONE
-    using MonoChain = juce::dsp::ProcessorChain<CutFilter, CutFilter, Filter, Filter, Filter>; //catena dei 2 filtri cut seguiti dai 3 peck
+   
+    using Comp = juce::dsp::Compressor<float>;
+
+    //using MonoChain = juce::dsp::ProcessorChain<Gain, CutFilter, CutFilter, Filter, Filter, Filter, Comp, Gain>;
+    //catena dei 2 filtri cut seguiti dai 3 peck e dal compressore
+    using MonoChain = juce::dsp::ProcessorChain<CutFilter, CutFilter, Filter, Filter, Filter>;
     
     MonoChain leftChain, rightChain;//catene per i due canali stereo
     
+    void updateLowPeakFilter(const ChainSettings& chainSetting);
+    void updateMediumPeakFilter(const ChainSettings& chainSetting);
+    void updateHighPeakFilter(const ChainSettings& chainSetting);
+
+    using Coefficients = Filter::CoefficientsPtr;
+    
+    static void updateCoefficients(Coefficients& old, const Coefficients& replacement);
+    
+    void updateCutAndPeakFilters(const ChainSettings& chainSetting);
+    
+    void updateLowCutFilter(const ChainSettings& chainSettings);
+    void updateHighCutFilter(const ChainSettings& chainSettings);
+
     enum ChainPosition
     {
+        //InputGain,
         LowCut,
         HighCut,
         LowPeak,
         MediumPeak,
-        HighPeak
+        HighPeak,
+        //Compressor,
+        //OutputGain
     };
-    
+
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CS_2110AudioProcessor)
 };
