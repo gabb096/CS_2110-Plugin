@@ -11,7 +11,26 @@
 
 //==============================================================================
 CS_2110AudioProcessorEditor::CS_2110AudioProcessorEditor (CS_2110AudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p)
+    : AudioProcessorEditor (&p), audioProcessor (p),
+inputGainAttachment(audioProcessor.apvts, "Input_Gain", inputGainSlider),
+lowCutFreqAttachment(audioProcessor.apvts, "LowCut_Freq", lowCutFreqSlider),
+lowCutSlope(audioProcessor.apvts, "LowCut_Slope", lowCutSlopeSlider),
+highCutFreqAttachment(audioProcessor.apvts, "HighCut_Freq", highCutFreqSlider),
+highCutSlopeAttachment(audioProcessor.apvts, "HighCut_Slope", highCutSlopeSlider),
+LMP_FreqAttachment(audioProcessor.apvts, "LowPeak_Freq", LMP_FreqSlider),
+LMP_GainAttachment(audioProcessor.apvts, "LowPeak_Gain", LMP_GainSlider),
+LMP_QualityAttachment(audioProcessor.apvts, "LowPeak_Q", LMP_QualitySlider),
+MP_FreqAttachment(audioProcessor.apvts, "MediumPeak_Freq", MP_FreqSlider),
+MP_GainAttachment(audioProcessor.apvts, "MediumPeak_Gain", MP_GainSlider),
+MP_QualityAttachment(audioProcessor.apvts, "MediumPeak_Q", MP_QualitySlider),
+HMP_FreqAttachment(audioProcessor.apvts, "HighPeak_Freq", HMP_FreqSlider),
+HMP_GainAttachment(audioProcessor.apvts, "HighPeak_Gain", HMP_GainSlider),
+HMP_QualityAttachment(audioProcessor.apvts, "HighPeak_Q", HMP_QualitySlider),
+thresholdAttachment(audioProcessor.apvts, "Threshold", thresholdSlider),
+ratioAttachment(audioProcessor.apvts, "Ratio", ratioSlider),
+attackAttachment(audioProcessor.apvts, "Attack", attackSlider),
+releaseAttachment(audioProcessor.apvts, "Release", releaseSlider),
+outputGainAttachment(audioProcessor.apvts, "Output_Gain", outputGainSlider)
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
@@ -48,13 +67,13 @@ void CS_2110AudioProcessorEditor::resized()
     outputGainSlider.setBounds(TopArea);
     
     auto CutFiltersArea = bounds.removeFromLeft(bounds.getWidth()*0.2);
-    auto LC_area = CutFiltersArea.removeFromBottom(CutFiltersArea.getHeight()*0.5);
+    auto LC_area = CutFiltersArea.removeFromTop(CutFiltersArea.getHeight()*0.5);
     
-    lowCutFreqSlider.setBounds(LC_area.removeFromBottom(LC_area.getHeight()*0.33));
-    lowCutSlope.setBounds(LC_area);
+    lowCutFreqSlider.setBounds(LC_area.removeFromTop(LC_area.getHeight()*0.4));
+    lowCutSlopeSlider.setBounds(LC_area);
     
-    highCutFreqSlider.setBounds(CutFiltersArea.removeFromBottom(CutFiltersArea.getHeight()*0.33));
-    highCutSlope.setBounds(CutFiltersArea);
+    highCutFreqSlider.setBounds(CutFiltersArea.removeFromTop(CutFiltersArea.getHeight()*0.4));
+    highCutSlopeSlider.setBounds(CutFiltersArea);
     
     auto LMP_Area = bounds.removeFromLeft(bounds.getWidth()*0.25);
     
@@ -81,8 +100,8 @@ void CS_2110AudioProcessorEditor::resized()
 std::vector<juce::Component*> CS_2110AudioProcessorEditor::getComps()
 {
     return{ &inputGainSlider,
-            &lowCutFreqSlider, &lowCutSlope,
-            &highCutFreqSlider, &highCutSlope,
+            &lowCutFreqSlider, &lowCutSlopeSlider,
+            &highCutFreqSlider, &highCutSlopeSlider,
             &LMP_FreqSlider, &LMP_GainSlider, &LMP_QualitySlider,
             &MP_FreqSlider, &MP_GainSlider, &MP_QualitySlider,
             &HMP_FreqSlider, &HMP_GainSlider, &HMP_QualitySlider,

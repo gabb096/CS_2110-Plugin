@@ -39,12 +39,25 @@ private:
     CS_2110AudioProcessor& audioProcessor;
 
     CustomRotarySlider inputGainSlider,
-    lowCutFreqSlider, lowCutSlope, highCutFreqSlider, highCutSlope,
+    lowCutFreqSlider, lowCutSlopeSlider, highCutFreqSlider, highCutSlopeSlider,
     LMP_FreqSlider, LMP_GainSlider, LMP_QualitySlider,
     MP_FreqSlider, MP_GainSlider, MP_QualitySlider,
     HMP_FreqSlider, HMP_GainSlider, HMP_QualitySlider,
     thresholdSlider, ratioSlider, attackSlider, releaseSlider,
     outputGainSlider;
+    
+    using APVTS = juce::AudioProcessorValueTreeState;
+    using Attachment = APVTS::SliderAttachment;
+    
+    Attachment inputGainAttachment,
+    lowCutFreqAttachment, lowCutSlope, highCutFreqAttachment, highCutSlopeAttachment,
+    LMP_FreqAttachment, LMP_GainAttachment, LMP_QualityAttachment,
+    MP_FreqAttachment, MP_GainAttachment, MP_QualityAttachment,
+    HMP_FreqAttachment, HMP_GainAttachment, HMP_QualityAttachment,
+    thresholdAttachment, ratioAttachment, attackAttachment, releaseAttachment,
+    outputGainAttachment;
+
+    
     
     std::vector<juce::Component*> getComps();
     
