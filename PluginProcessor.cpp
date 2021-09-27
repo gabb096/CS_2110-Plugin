@@ -517,7 +517,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout CS_2110AudioProcessor::creat
     layout.add(std::make_unique<juce::AudioParameterFloat>("HighPeak_Freq",
                                                            "HighPeak Freq",
                                                            juce::NormalisableRange<float>(7000.f, 20000.f, 1.f, 1.f),
-                                                           10000.f));
+                                                           9000.f));
     
     layout.add(std::make_unique<juce::AudioParameterFloat>("HighPeak_Gain",
                                                            "HighPeak Gain",

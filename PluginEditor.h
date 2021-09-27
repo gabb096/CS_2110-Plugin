@@ -11,13 +11,38 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 
-struct CustomRotarySlider : juce::Slider
+struct LookAndFeel : juce::LookAndFeel_V4
 {
-    CustomRotarySlider() : juce::Slider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
-                                        juce::Slider::TextEntryBoxPosition::NoTextBox)
+    void drawRotarySlider (juce::Graphics&,
+                           int x, int y, int width, int height,
+                           float sliderPosProportional,
+                           float rotaryStartAngle,
+                           float rotaryEndAngle,
+                           juce::Slider& ) override;
+};
+
+struct RotarySliderWithLabels : juce::Slider
+{
+    RotarySliderWithLabels(juce::RangedAudioParameter & rap, const juce::String & unitSuffix) :
+    juce::Slider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
+                 juce::Slider::TextEntryBoxPosition::NoTextBox),
+    param(&rap),
+    suffix(unitSuffix)
     {
-        
+        setLookAndFeel(& lnf);
     }
+    
+    ~RotarySliderWithLabels()  { setLookAndFeel(nullptr); }
+    
+    void paint(juce::Graphics& g) override;
+    juce::Rectangle<int> getSliderBounds() const;
+    int getTextHeight() const { return 14; }
+    juce::String getDisplayString() const;
+private:
+    LookAndFeel lnf;
+    
+    juce::RangedAudioParameter* param;
+    juce::String suffix;
 };
 
 //==============================================================================
@@ -38,13 +63,15 @@ private:
     // access the processor object that created it.
     CS_2110AudioProcessor& audioProcessor;
 
-    CustomRotarySlider inputGainSlider,
+    RotarySliderWithLabels inputGainSlider,
     lowCutFreqSlider, lowCutSlopeSlider, highCutFreqSlider, highCutSlopeSlider,
     LMP_FreqSlider, LMP_GainSlider, LMP_QualitySlider,
     MP_FreqSlider, MP_GainSlider, MP_QualitySlider,
     HMP_FreqSlider, HMP_GainSlider, HMP_QualitySlider,
     thresholdSlider, ratioSlider, attackSlider, releaseSlider,
     outputGainSlider;
+    
+    juce::ToggleButton phaseButton;
     
     using APVTS = juce::AudioProcessorValueTreeState;
     using Attachment = APVTS::SliderAttachment;
@@ -57,7 +84,9 @@ private:
     thresholdAttachment, ratioAttachment, attackAttachment, releaseAttachment,
     outputGainAttachment;
 
-    
+    juce::ImageComponent imageComponent;
+
+    APVTS::ButtonAttachment phaseButtonAttachment;
     
     std::vector<juce::Component*> getComps();
     
