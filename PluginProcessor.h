@@ -21,7 +21,7 @@ enum Slope
 
 struct ChainSettings
 {
-    //controlla di fase
+    //controllo di fase
     bool phase {false};
     //input e output gain
     float inputGainInDecibels{0}, outputGainInDecibels{0};

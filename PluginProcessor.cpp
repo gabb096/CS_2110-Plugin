@@ -93,8 +93,7 @@ void CS_2110AudioProcessor::changeProgramName (int index, const juce::String& ne
 //==============================================================================
 void CS_2110AudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
+
     juce::dsp::ProcessSpec spec;
     
     spec.maximumBlockSize = samplesPerBlock;
@@ -107,8 +106,16 @@ void CS_2110AudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
     auto chainSettings = getChainSettings(apvts);
     
     updateInputGainAndPhase(chainSettings);
-    updateCutAndPeakFilters(chainSettings);
+    
+    updateLowCutFilter(chainSettings);
+    updateHighCutFilter(chainSettings);
+    
+    updateLowPeakFilter(chainSettings);
+    updateMediumPeakFilter(chainSettings);
+    updateHighPeakFilter(chainSettings);
+
     updateCompressor(chainSettings);
+
     updateOutputGain(chainSettings);
 
 }
@@ -148,6 +155,7 @@ bool CS_2110AudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) 
 void CS_2110AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
+    
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
@@ -157,17 +165,25 @@ void CS_2110AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
     auto chainSettings = getChainSettings(apvts);
     
     updateInputGainAndPhase(chainSettings);
-    updateCutAndPeakFilters(chainSettings);
+    
+    updateLowCutFilter(chainSettings);
+    updateHighCutFilter(chainSettings);
+    
+    updateLowPeakFilter(chainSettings);
+    updateMediumPeakFilter(chainSettings);
+    updateHighPeakFilter(chainSettings);
+
     updateCompressor(chainSettings);
+
     updateOutputGain(chainSettings);
    
-    
     // Dividiamo dal buffer che l'host invierà il canale destro e sinistro per darli alle rispettive "catene"
     juce::dsp::AudioBlock<float> block(buffer);
     
     auto leftBlock = block.getSingleChannelBlock(0);
     auto rightBlock = block.getSingleChannelBlock(1);
     
+    //usiamo l'inizializzazione con le parentesi perchè leftContext è una struct e a quanto pare è buona pratica
     juce::dsp::ProcessContextReplacing<float> leftContext(leftBlock);
     juce::dsp::ProcessContextReplacing<float> rightContext(rightBlock);
     //Ora possiamo passarli e processare l'audio in ingresso
@@ -184,8 +200,8 @@ bool CS_2110AudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* CS_2110AudioProcessor::createEditor()
 {
-    //return new CS_2110AudioProcessorEditor (*this);
-    return new juce::GenericAudioProcessorEditor(*this);
+    return new CS_2110AudioProcessorEditor (*this);
+//  return new juce::GenericAudioProcessorEditor(*this);
 }
 
 //==============================================================================
@@ -257,11 +273,9 @@ void CS_2110AudioProcessor::updateInputGainAndPhase(const ChainSettings &chainSe
     if(chainSettings.phase)
         gain = -1.f * gain;
     
-    auto& leftGain = leftChain.get<ChainPosition::InputGain>();
-    leftGain.setGainLinear(gain);
+    leftChain.get<ChainPosition::InputGain>().setGainLinear(gain);
    
-    auto& rightGain = rightChain.get<ChainPosition::InputGain>();
-    rightGain.setGainLinear(gain);
+    rightChain.get<ChainPosition::InputGain>().setGainLinear(gain);
 }
 
 void CS_2110AudioProcessor::updateLowCutFilter(const ChainSettings &chainSettings)
@@ -367,8 +381,6 @@ void CS_2110AudioProcessor::updateLowPeakFilter(const ChainSettings& chainSettin
     
     updateCoefficients(leftChain.get<ChainPosition::LowPeak>().coefficients,  lowPeakCoefficients);
     updateCoefficients(rightChain.get<ChainPosition::LowPeak>().coefficients, lowPeakCoefficients);
-
-
 }
 
 void CS_2110AudioProcessor::updateMediumPeakFilter(const ChainSettings& chainSettings)
@@ -395,14 +407,14 @@ void CS_2110AudioProcessor::updateHighPeakFilter(const ChainSettings& chainSetti
 
 }
 
-void CS_2110AudioProcessor::updateCutAndPeakFilters(const ChainSettings& chainSetting)
+void CS_2110AudioProcessor::updateCutAndPeakFilters(const ChainSettings& chainSettings)
 {
-    updateLowCutFilter(chainSetting);
-    updateHighCutFilter(chainSetting);
+    updateLowCutFilter(chainSettings);
+    updateHighCutFilter(chainSettings);
     
-    updateLowPeakFilter(chainSetting);
-    updateMediumPeakFilter(chainSetting);
-    updateHighPeakFilter(chainSetting);
+    updateLowPeakFilter(chainSettings);
+    updateMediumPeakFilter(chainSettings);
+    updateHighPeakFilter(chainSettings);
 }
 
 
@@ -411,8 +423,6 @@ void CS_2110AudioProcessor::updateCoefficients(Coefficients& old, const Coeffici
 
 void CS_2110AudioProcessor::updateCompressor(const ChainSettings& chainSetting)
 {
-    auto threshold = juce::Decibels::decibelsToGain(chainSetting.thresholdInDecibels);
-    
     auto& leftComp = leftChain.get<ChainPosition::Compressor>();
     leftComp.setThreshold(chainSetting.thresholdInDecibels);
     leftComp.setRatio(chainSetting.ratio);
@@ -432,11 +442,9 @@ void CS_2110AudioProcessor::updateOutputGain(const ChainSettings &chainSettings)
    
     auto gain = juce::Decibels::decibelsToGain(chainSettings.outputGainInDecibels);
 
-    auto& leftGain = leftChain.get<ChainPosition::OutputGain>();
-    leftGain.setGainLinear(gain);
+    leftChain.get<ChainPosition::OutputGain>().setGainLinear(gain);
        
-    auto& rightGain = rightChain.get<ChainPosition::OutputGain>();
-    rightGain.setGainLinear(gain);
+    rightChain.get<ChainPosition::OutputGain>().setGainLinear(gain);
 }
 
 
@@ -523,8 +531,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout CS_2110AudioProcessor::creat
     // Compressor =========================================================================================
     layout.add(std::make_unique<juce::AudioParameterFloat>("Threshold",
                                                            "Threshold",
-                                                           juce::NormalisableRange<float>(-60.f, 0.0f, 0.5f, 1.f),
-                                                           -20.0f));
+                                                           juce::NormalisableRange<float>(-48.f, 0.0f, 0.5f, 1.f),
+                                                           0.0f));
 
     layout.add(std::make_unique<juce::AudioParameterFloat>("Ratio",
                                                            "Ratio",
