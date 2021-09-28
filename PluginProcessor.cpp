@@ -200,8 +200,8 @@ bool CS_2110AudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* CS_2110AudioProcessor::createEditor()
 {
-    return new CS_2110AudioProcessorEditor (*this);
-//  return new juce::GenericAudioProcessorEditor(*this);
+ //   return new CS_2110AudioProcessorEditor (*this);
+  return new juce::GenericAudioProcessorEditor(*this);
 }
 
 //==============================================================================
@@ -300,22 +300,22 @@ void CS_2110AudioProcessor::updateLowCutFilter(const ChainSettings &chainSetting
     
     switch (chainSettings.lowCutSlope)
     {
-        case Slope_48:
+        case Slope_24:
             *leftLowCut.get<3>().coefficients = *lowCutCoefficients[3];
             leftLowCut.setBypassed<3>(false);
             *rightLowCut.get<3>().coefficients = *lowCutCoefficients[3];
             rightLowCut.setBypassed<3>(false);
-        case Slope_36:
+        case Slope_18:
             *leftLowCut.get<2>().coefficients = *lowCutCoefficients[2];
             leftLowCut.setBypassed<2>(false);
             *rightLowCut.get<2>().coefficients = *lowCutCoefficients[2];
             rightLowCut.setBypassed<2>(false);
-        case Slope_24:
+        case Slope_12:
             *leftLowCut.get<1>().coefficients = *lowCutCoefficients[1];
             leftLowCut.setBypassed<1>(false);
             *rightLowCut.get<1>().coefficients = *lowCutCoefficients[1];
             rightLowCut.setBypassed<1>(false);
-        case Slope_12:
+        case Slope_6:
             *leftLowCut.get<0>().coefficients = *lowCutCoefficients[0];
             leftLowCut.setBypassed<0>(false);
             *rightLowCut.get<0>().coefficients = *lowCutCoefficients[0];
@@ -345,25 +345,25 @@ void CS_2110AudioProcessor::updateHighCutFilter(const ChainSettings &chainSettin
     
     switch (chainSettings.highCutSlope)
     {
-        case Slope_48:
+        case Slope_24:
             *leftHighCut.get<3>().coefficients = *highCutCoefficients[3];
              leftHighCut.setBypassed<3>(false);
             
             *rightHighCut.get<3>().coefficients = *highCutCoefficients[3];
              rightHighCut.setBypassed<3>(false);
-        case Slope_36:
+        case Slope_18:
             *leftHighCut.get<2>().coefficients = *highCutCoefficients[2];
              leftHighCut.setBypassed<2>(false);
             
             *rightHighCut.get<2>().coefficients = *highCutCoefficients[2];
              rightHighCut.setBypassed<2>(false);
-        case Slope_24:
+        case Slope_12:
             *leftHighCut.get<1>().coefficients = *highCutCoefficients[1];
              leftHighCut.setBypassed<1>(false);
             
             *rightHighCut.get<1>().coefficients = *highCutCoefficients[1];
              rightHighCut.setBypassed<1>(false);
-        case Slope_12:
+        case Slope_6:
             *leftHighCut.get<0>().coefficients = *highCutCoefficients[0];
              leftHighCut.setBypassed<0>(false);
             
@@ -453,7 +453,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout CS_2110AudioProcessor::creat
 {
     juce::StringArray SlopeStrArray;
     for(int i=0; i<4; ++i)
-        SlopeStrArray.add( juce::String( (12 + i*12) ) + " dB/Oct" );
+        SlopeStrArray.add( juce::String( (6 + i*6) ) + " dB/Oct" );
     // SlopeStrArray = [12 dB/Oct, 24 dB/Oct, 36 dB/Oct, 48 dB/Oct]
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
     // Inversione di fase ==============================================================================
@@ -531,23 +531,23 @@ juce::AudioProcessorValueTreeState::ParameterLayout CS_2110AudioProcessor::creat
     // Compressor =========================================================================================
     layout.add(std::make_unique<juce::AudioParameterFloat>("Threshold",
                                                            "Threshold",
-                                                           juce::NormalisableRange<float>(-48.f, 0.0f, 0.5f, 1.f),
+                                                           juce::NormalisableRange<float>(-48.f, 0.0f, 0.5f, 0.5f),
                                                            0.0f));
 
     layout.add(std::make_unique<juce::AudioParameterFloat>("Ratio",
                                                            "Ratio",
-                                                           juce::NormalisableRange<float>(1.f, 20.f, 0.5f, 1.f),
+                                                           juce::NormalisableRange<float>(1.f, 20.f, 0.5f, 0.7f),
                                                            2.0f));
 
     layout.add(std::make_unique<juce::AudioParameterFloat>("Attack",
                                                            "Attack",
-                                                           juce::NormalisableRange<float>(1.f, 200.f, 0.5f, 1.f),
-                                                           2.0f));
+                                                           juce::NormalisableRange<float>(1.f, 200.f, 0.1f, 1.f),
+                                                           5.0f));
     
     layout.add(std::make_unique<juce::AudioParameterFloat>("Release",
                                                            "Release",
-                                                           juce::NormalisableRange<float>(1.f, 200.f, 0.5f, 1.f),
-                                                           2.0f));
+                                                           juce::NormalisableRange<float>(1.f, 200.f, 0.1f, 1.f),
+                                                           5.0f));
 
     //layout.add(std::make_unique<juce::AudioParameterFloat>("MakeUp_Gain",
     //                                                       "MakeUp Gain",

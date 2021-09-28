@@ -7,7 +7,7 @@
 */
 
 /* palette colori usati
-    giallo Colour(255u, 191u,0u)
+    giallo Colour(246u, 202u,131u)
     arancio Colour(255u, 165u, 0u)
     blu scuro Colour(67u, 69u, 90u)
     menta Colour(171u, 229u, 213u)
@@ -28,7 +28,7 @@ void LookAndFeel::drawRotarySlider(juce::Graphics& g,
 
     auto bounds = Rectangle<float>(x, y, width, height);
     
-    g.setColour(Colour(255u, 191u,0u)); //colore del bordo
+    g.setColour(Colour(246u, 202u,131u)); //colore del bordo
     //g.setColour(Colours::green);
     g.drawEllipse(bounds,3.f);  //disegno bordo
     
@@ -52,7 +52,18 @@ void LookAndFeel::drawRotarySlider(juce::Graphics& g,
         p.applyTransform(AffineTransform().rotated(sliderAngRad, center.getX(), center.getY()));
         
         g.fillPath(p);
+        /*
+         //questa sezione aggiunge il testo con il valore del parametro al centro dello slider
+        g.setFont(rswl->getTextHeight());
+        auto text = rswl->getDisplayString();
+        auto strWidth = g.getCurrentFont().getStringWidth(text);
         
+        r.setSize(strWidth+4, rswl->getTextHeight()+2);
+        
+        r.setCentre(bounds.getCentre());
+        g.setColour(Colours::white);
+        g.drawFittedText(text, r.toNearestInt(), juce::Justification::centred, 1);
+        */
         }
    
 }
@@ -173,7 +184,8 @@ void CS_2110AudioProcessorEditor::paint (juce::Graphics& g)
 void CS_2110AudioProcessorEditor::resized()
 {
     
-    //imageComponent.setBounds(getLocalBounds());
+    imageComponent.setBounds(getLocalBounds());
+    
     auto width = getLocalBounds().getWidth();
     auto height = getLocalBounds().getHeight();
     auto bigKnob = width*0.13;
@@ -181,11 +193,11 @@ void CS_2110AudioProcessorEditor::resized()
     auto h = height/10;
     auto w = width/15;
     
-    inputGainSlider.setBounds  (2*w-bigKnob/2, h-bigKnob/2, bigKnob, bigKnob);
+    inputGainSlider.setBounds  (2*w-16, h-bigKnob/2, bigKnob, bigKnob);
     
-    phaseButton.setBounds(150, 15, 25, 30);
+    phaseButton.setBounds(6, 38, 25, 30);
     
-    outputGainSlider.setBounds(13*w-bigKnob/2, h-bigKnob/2, bigKnob, bigKnob);
+    outputGainSlider.setBounds(13*w-58, h-bigKnob/2, bigKnob, bigKnob);
     
     lowCutFreqSlider.setBounds (2*w-bigKnob/2, 3*h-bigKnob/2, bigKnob, bigKnob);
     lowCutSlopeSlider.setBounds(3*w-smallKnob/2, 5*h-smallKnob/2, smallKnob, smallKnob);
@@ -206,8 +218,8 @@ void CS_2110AudioProcessorEditor::resized()
     HMP_GainSlider.setBounds   (10*w-bigKnob/2, 5.5*h-bigKnob/2, bigKnob, bigKnob);
     HMP_QualitySlider.setBounds(10*w-bigKnob/2, 8*h-bigKnob/2, bigKnob, bigKnob);
     
-    thresholdSlider.setBounds(13*w-bigKnob/2, 3*h-bigKnob/2, bigKnob, bigKnob);
-    ratioSlider.setBounds    (13*w-bigKnob/2, 5*h-bigKnob/2, bigKnob, bigKnob);
+    thresholdSlider.setBounds(13*w-bigKnob/2, 3*h-bigKnob/2+5, bigKnob, bigKnob);
+    ratioSlider.setBounds    (13*w-bigKnob/2+2, 5*h-bigKnob/2+2, bigKnob, bigKnob);
     attackSlider.setBounds   (12.3*w-smallKnob/2, 7*h-smallKnob/2, smallKnob, smallKnob);
     releaseSlider.setBounds  (13.7*w-smallKnob/2, 9*h-smallKnob/2, smallKnob, smallKnob);
     

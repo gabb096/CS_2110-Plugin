@@ -13,10 +13,10 @@
 
 enum Slope
 {
+    Slope_6,
     Slope_12,
-    Slope_24,
-    Slope_36,
-    Slope_48
+    Slope_18,
+    Slope_24
 };
 
 struct ChainSettings
@@ -27,7 +27,7 @@ struct ChainSettings
     float inputGainInDecibels{0}, outputGainInDecibels{0};
     // lowCut e highCut
     float lowCutFreq {0}, highCutFreq {0};
-    int lowCutSlope {Slope::Slope_12}, highCutSlope {Slope::Slope_12};
+    int lowCutSlope {Slope::Slope_12}, highCutSlope {Slope::Slope_6};
     // filtri peak
     float lowPeakFreq {0}, lowPeakGainInDecibels {0}, lowPeakQuality {1.f};
     float mediumPeakFreq {0}, mediumPeakGainInDecibels {0}, mediumPeakQuality {1.f};
@@ -92,12 +92,11 @@ private:
     
     using Filter = juce::dsp::IIR::Filter<float>; //per fare prima
     
-    using CutFilter = juce::dsp::ProcessorChain<Filter, Filter, Filter, Filter>;//catena di 4 filtri da 12dB/Oct
-    //CAPIRE COME AGGIUNGERE GAIN E COMPRESSORE ALLA CATENA ED EVENTUALMENTE CREARNE 2 CON PEAK e COMP INTERCAMBIABILI CON UN BOTTONE
+    using CutFilter = juce::dsp::ProcessorChain<Filter, Filter, Filter, Filter>;
+    //catena di 4 filtri da -6dB/Oct
    
     using Comp = juce::dsp::Compressor<float>;
 
-    //catena dei 2 filtri cut seguiti dai 3 peck e dal compressore
     using MonoChain = juce::dsp::ProcessorChain<Gain, CutFilter, CutFilter, Filter, Filter, Filter, Comp, Gain>;
     
     MonoChain leftChain, rightChain;//catene per i due canali stereo
