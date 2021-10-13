@@ -200,8 +200,8 @@ bool CS_2110AudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* CS_2110AudioProcessor::createEditor()
 {
- //   return new CS_2110AudioProcessorEditor (*this);
   return new juce::GenericAudioProcessorEditor(*this);
+  //return new CS_2110AudioProcessorEditor (*this);
 }
 
 //==============================================================================
@@ -259,7 +259,6 @@ ChainSettings getChainSettings(juce::AudioProcessorValueTreeState & apvts)
     settings.ratio = apvts.getRawParameterValue("Ratio")->load();
     settings.attack = apvts.getRawParameterValue("Attack")->load();
     settings.release = apvts.getRawParameterValue("Release")->load();
-    //settings.makeUpGainInDecibels = apvts.getRawParameterValue("MakeUp_Gain")->load();
     
     settings.outputGainInDecibels = apvts.getRawParameterValue("Output_Gain")->load();
 
@@ -549,10 +548,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout CS_2110AudioProcessor::creat
                                                            juce::NormalisableRange<float>(1.f, 200.f, 0.1f, 1.f),
                                                            5.0f));
 
-    //layout.add(std::make_unique<juce::AudioParameterFloat>("MakeUp_Gain",
-    //                                                       "MakeUp Gain",
-    //                                                       juce::NormalisableRange<float>(-12.f, 12.f, 0.05f, 1.f),
-    //                                                       0.0f));
     // Output Gain ========================================================================================
     layout.add(std::make_unique<juce::AudioParameterFloat>("Output_Gain",
                                                            "Output Gain",
